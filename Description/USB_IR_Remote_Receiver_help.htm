@@ -1,0 +1,863 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 12.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>USB IR Remote Receiver description</title>
+    <style type="text/css">
+        .style1
+        {
+            text-decoration: underline;
+        }
+        .style2
+        {
+            color: #0033CC;
+        }
+        .style3
+        {
+            color: #808080;
+        }
+        .style4
+        {
+            font-family: "Courier New", Courier, monospace;
+            height: 207px;
+            width: 697px;
+        }
+        .style5
+        {
+            font-size: x-small;
+        }
+        .style6
+        {
+            font-family: "Courier New", Courier, monospace;
+            font-size: x-small;
+        }
+        .style7
+        {
+            color: #FF0000;
+        }
+        </style>
+</head>
+
+<body>
+
+<h2 align="center"><u>USB IR Remote Receiver (AVR Multiprotocol Receiver) 
+    description</u></h2>
+<p>&nbsp;</p>
+<p><i><b><font color="#FF0000">General description of the device</font></b></i></p>
+<p style="margin-left: 20px">German Project site: <a href="http://www.mikrocontroller.net/articles/USB_IR_Remote_Receiver">
+    USB IR Remote Receiver</a></p>
+<p style="margin-left: 20px">The USB IR Remote Receiver is based on Frank M. 
+    <a href="http://www.mikrocontroller.net/articles/IRMP">IRMP - 
+    Infrarot-Multiprotokoll-Decoder</a> and 
+    <a href="http://www.obdev.at/products/vusb/index.html">V-USB</a>.<br />
+    The main motivation for this project was the outdated Igor Plug remote receiver. 
+    As Frank M. is descripting RC5 is obsolete I decided to combine Frank M.<br />
+    multiprotocol receiver with V-USB to be able to receive also other protocols 
+    through the USB port. Also newer motherboards do not always include a serial COM 
+    port.<br />
+    <br />
+    The device is working as low speed USB 1.1 device. As it get recognized as HID 
+    device on Windows no special driver is needed (tested on Windows 7 x86 and WinXP 
+    SP3).<br />
+    <br />
+    The firmware can be easily updated if the modified bootloadHID get programed 
+    first on the device.<br />
+    <br />
+    The USB IR Remote Receiver has also a PowerOn function to start/shutdown the 
+    host PC through the remote control. The first received IR code will be stored in 
+    EEPROM.<br />
+        If a received IR code equals the stored code the device will switch on a 
+    output pin for ~250ms. (see AVR source description).<br />
+    With the modified bootloaderHID it is possible to update the firmware of the 
+    device without needing to set a jumper or to disconnect/reconnect the device.<br />
+    <br />
+    Supported software:<br />
+&nbsp;&nbsp;&nbsp; <a href="http://www.dvbviewer.com">DVBViewer</a>: copy 
+    'USB_IR_Remote_Receiver.dll' to \DVBViewer\Plugins and enable the input plugin 
+    in the DVBViewer options<br />
+&nbsp;&nbsp;&nbsp; <a href="http://www.promixis.com">Girder</a>: copy 
+    'USB_IR_Remote_Receiver.dll' to \Girder\Plugins and enable the plugin in the 
+    Girder options. Girder versions since 3.2.9 are supported<br />
+&nbsp;&nbsp;&nbsp; <a href="http://www.eventghost.org">EventGhost</a>: copy 
+    'USB_IR_Remote_Receiver.dll' and '__init__.py' to 
+    \EventGhost\plugins\USBIRRemoteReceiver and add the plugin in EventGhost<br />
+&nbsp;&nbsp;&nbsp; Native: also the 'USB_IR_Remote_Receiver.dll' can be used for 
+    self made programs with the functions InitNative and InitPAnsiChar (see below)<br />
+    <br />
+    Right now these IR protocols are supported by the included IRMP version from 
+    '20.09.2011':</p>
+    
+<table class="wikitable">
+<tr>
+<th> Protokoll </th><th> Hersteller
+</th></tr>
+<tr>
+<td> SIRCS </td><td> Sony
+</td></tr>
+<tr>
+<td> NEC </td><td> NEC, Yamaha, Canon, Tevion, Harman/Kardon, Hitachi, JVC, Pioneer, 
+    Toshiba, Xoro, Orion, NoName und viele weitere japanische Hersteller.
+</td></tr>
+<tr>
+<td> SAMSUNG </td><td> Samsung
+</td></tr>
+<tr>
+<td> SAMSUNG32 </td><td> Samsung
+</td></tr>
+<tr>
+<td> MATSUSHITA </td><td> Matsushita
+</td></tr>
+<tr>
+<td> KASEIKYO </td><td> Panasonic, Technics, Denon und andere japanische Hersteller, 
+    welche Mitglied der &quot;Japan's Association for Electric Home Application&quot; sind.
+</td></tr>
+<tr>
+<td> RECS80 </td><td> Philips, Nokia, Thomson, Nordmende, Telefunken, Saba
+</td></tr>
+<tr>
+<td> RECS80EXT </td><td> Philips, Technisat, Thomson, Nordmende, Telefunken, Saba
+</td></tr>
+<tr>
+<td> RC5 </td><td> Philips und andere europäische Hersteller
+</td></tr>
+<tr>
+<td> DENON </td><td> Denon
+</td></tr>
+<tr>
+<td> RC6 </td><td> Philips und andere europäische Hersteller
+</td></tr>
+<tr>
+<td> RC6A </td><td> Philips, Kathrein und andere Hersteller, z.B. XBOX
+</td></tr>
+<tr>
+<td> APPLE </td><td> Apple
+</td></tr>
+<tr>
+<td> NUBERT </td><td> Nubert, z.B. Subwoofer System
+</td></tr>
+<tr>
+<td> B&amp;O </td><td> Bang &amp; Olufsen
+</td></tr>
+<tr>
+<td> GRUNDIG </td><td> Grundig
+</td></tr>
+<tr>
+<td> NOKIA </td><td> (Nokia) D-Box 2
+</td></tr>
+<tr>
+<td> SIEMENS </td><td> Siemens, z.B. Gigaset M740AV (ab ~15kHz, siehe Bemerkungen zu F_INTERRUPTS)</td></tr>
+<tr>
+<td> FDC </td><td> FDC Keyboard (ab ~15kHz)</td></tr>
+<tr>
+<td> RCCAR </td><td> RC Car: IR Fernbedienung für Modellfahrzeuge</td></tr>
+<tr>
+<td> JVC </td><td> JVC</td></tr>
+<tr>
+<td> NIKON </td><td> NIKON</td></tr>
+<tr>
+<td> RUWIDO </td><td> RUWIDO</td></tr>
+<tr>
+<td> KATHREIN </td><td> KATHREIN</td></tr>
+<tr>
+<td> NEC16 </td><td> JVC</td></tr>
+<tr>
+<td> NEC42 </td><td> JVC</td></tr>
+<tr>
+<td> LEGO </td><td> LEGO </td></tr>
+<tr>
+<td> THOMSON </td><td> THOMSON</td></tr></table>
+
+    <p><b>Change log</b></p>
+    <p style="margin-left: 20px">
+				02.01.2012:<br />      
+        &nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.14, removed timing option, added IRMP logging option<br />
+        &nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp; Removed timing option, added IRMP logging option, 
+        converted project to AVR Studio v5<br />  
+        
+        <br />       	
+				26.10.2011:<br />      
+        &nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.13, added new protocols to standard list<br />
+        &nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp; Updated Irmp to 20.09.2011, new protocol RUWIDO, KATHREIN,
+        NEC16, NEC42, LEGO and THOMSON.<br />  
+        
+        <br />    	
+				14.07.2011:<br />      
+        &nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.12, fixed issue with EventGhost<br />
+        
+        <br />    	
+        27.02.2011:<br />      
+        &nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.11, fixed issue with EventGhost, fixed InitNative/InitPAnsiChar<br />
+        
+        <br />      	
+        04.02.2011:<br />      
+        &nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp; Added source and release of new USB IR Receiver v1.6 and bootLoadHID v1.1. To compile choose the right CPU for the device!<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        All sources are updated to the last V-USB version: Atmegas with suffix "p" are now supported.<br /> 
+        
+        <br />     	
+        26.01.2011:<br />
+        &nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.10, added new protocols to standard list<br />       
+        &nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp; Updated Irmp to 18.01.2011, new protocol RC6A, JVC and NIKON<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        Because of the limitation by the memory of the Atmega8 it is not anymore 
+        possible to enable all protocols in the 'irmpconfig.h'. Just recompile the 
+        project for your needs.<br /> 
+        
+        <br />    
+        28.06.2010:<br />
+        &nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.9, added new protocols to standard list<br />       
+        &nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp; Updated Irmp to 26.06.2010, new protocol FDC and RCCAR<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        Because of the limitation by the memory of the Atmega8 it is not anymore 
+        possible to enable all protocols in the 'irmpconfig.h'. Just recompile the 
+        project for your needs.<br />       
+        
+        <br />        
+        06.06.2010:<br />
+        &nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.8, added new protocols to standard list,<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New: If a new protocol is missing in the INI file it will be added automatically<br />
+        &nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp; Updated Irmp to 02.06.2010, new protocol NOKIA and SIEMENS, bugfix Grundig<br />   
+    
+        <br />
+        18.05.2010:<br />
+        &nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.7, just added new protocol to standard list,<br />        
+        &nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp; Updated Irmp to 17.05.2010, new protocol GRUNDIG, bugfix SAMSUNG32<br />
+        <br />
+        09.05.2010:<br />
+&nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.6, Fixd bug with standby and 
+        disconnecting the device<br />
+&nbsp;&nbsp;&nbsp; EventGhost: Added plugin to be able to use the device with EventGhost<br />
+        <br />
+        02.05.2010:<br />
+&nbsp;&nbsp;&nbsp; Docu:&nbsp;&nbsp;&nbsp; Updated schematic for using PonyProg2000 with 
+        the LPT port. Added PonyProg2000 flashing description.<br />
+        <br />
+        28.04.2010:<br />
+&nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp;&nbsp; v1.0.0.5, Added possibility to flash or 
+        update the device firmware direct with the USB IR Remote Receiver 
+        settings/option dialog.<br />
+&nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp; Bugfix code repeats,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        Updated Irmp to 28.04.2010,<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        Added modified booloadHID to be able to flash the device without setting a 
+        jumper or needed disconnect/reconnect of the device<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        The booloadHID will boot if:<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ no USB IR Remote Receiver firmware is flashed;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        + jumper is set<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        + the firmware itself is reseting the device for bootloader modus<br />
+        <br />23.04.2010:<br />
+&nbsp;&nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.4, Added Key Suppression, Bugfix 
+        of DVBViewer on showing settings/option dialog<br />
+&nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp;optimized detection for PowerON IR code, Bugfix for more than 
+        255 IR code repeats<br />
+        <br />
+        16.04.2010:<br />
+&nbsp;&nbsp;&nbsp; DLL:&nbsp;&nbsp;&nbsp; v1.0.0.3, Added InitNative, InitPAnsiChar and 
+        Girder functions.<br />
+&nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp;Updated Irmp to 16.04.2010<br />
+        <br />
+        12.04.2010:<br />
+&nbsp;&nbsp;&nbsp; AVR:&nbsp;&nbsp;&nbsp;Updated Irmp to 12.04.2010, new protocol B&amp;Q</p>
+    <p><b>Hardware schematic</b></p>
+    <p style="margin-left: 80px; margin-right: 697px">
+    <IMG SRC="Images\USB_IR_Remote_Receiver_schematic.jpg" ALT="USB IR Remote Receiver" 
+            style="height: 501px; width: 734px">
+        <br />
+    </p>
+
+
+
+    <p style="margin-left: 20px">The diodes ZD1 and ZD2 are needed to comply to the USB 
+        standard.<br />
+        The IR receiver can be also one of this types:<br />
+&nbsp;&nbsp;&nbsp; Vishay TSOP 1738, Vishay TSOP 1838, Vishay TSOP 11xx series, Siemens 
+        SFH 5110, Radio Shack 276-0137, Mitsumi IR Preamp KEY-COOSV (0924G),<br />
+&nbsp;&nbsp;&nbsp; Toshiba TK19 444 TFMS 5360, Temic TFMS 5380 by Telefunken 
+        Semiconductors, Sharp IS1U60, Everlight IRM-8601S, Sony SBX 1620-12, Sharp 
+        GP1U271R<br />
+        Optional: OK1 if the PowerOn function is used to start/shutdown the host PC<br />
+                Optional: J1 if a bootloader will be used:
+        <a href="http://www.obdev.at/products/vusb/bootloadhid.html">bootloadHID</a><br />
+&nbsp;&nbsp;&nbsp; If the bootloader get be used be sure to write the right fuse bits. 
+        Otherwise the bootloader will be deleted after the first flashing.
+        <br />
+            &nbsp;&nbsp;&nbsp; With the included modified bootloadHID this jumper isn't 
+        needed anymore.<br />
+        Optional: CN2, R8 and R9: Only needed once to download the modified bootloadHID 
+        with 
+        <a href="http://www.lancos.com/prog.html">PonyProg2000</a>.<br />
+
+    <p style="margin-left: 0px">Picture of an assembled USB IR Remote Receiver:</p>
+    <p style="margin-left: 80px">
+        <IMG SRC="Images/avr_hardware_front.jpg" ALT="AVR" 
+            style="height: 465px; width: 620px">         <img alt="AVR_Back" 
+            src="Images/avr_hardware_back.jpg" style="height: 465px; width: 620px" /></p>
+    <p style="margin-left: 0px">
+    	
+    <p style="margin-left: 80px">
+        <IMG SRC="Images/800px-USB_IR_Remote_Receiver_Top.jpg" ALT="AVR" 
+            style="height: 465px; width: 620px">         <img alt="AVR_Back" 
+            src="Images/800px-USB_IR_Remote_Receiver_Bot.jpg" style="height: 465px; width: 620px" /></p>
+    <p style="margin-left: 0px">
+    	    	
+    <b>AVR Source description</b></p>
+    <p style="margin-left: 20px">
+        To compile the source
+        <a href="http://www.atmel.com/dyn/Products/tools_card.asp?tool_id=2725">Atmel 
+        AVR Studio</a> and <a href="http://winavr.sourceforge.net">WinAVR</a> will be 
+        needed.<br />
+        <br />
+        irmpconfig.h:<br />
+&nbsp;&nbsp;&nbsp; (pin can be changed if the IR receiver diode is not connected to PD4)
+<div style="margin-left: 20px" class="code"><table><tr><td><div><pre class="c"><span 
+        class="style2">#define</span><span style="color: #339933;"> </span>IRMP_PORT  PORTB
+<span class="style2">#define</span><span style="color: #339933;"> </span>IRMP_DDR   DDRD
+<span class="style2">#define</span><span style="color: #339933;"> </span>IRMP_PIN   PIND
+<span class="style2">#define</span><span style="color: #339933;"> </span>IRMP_BIT   4<span style="color: #339933;">           // use PD4 as IR input</span>
+<br />
+<span class="style2">#define</span><span style="color: #339933;"> </span>IRMP_LOGGING   0<span style="color: #339933;">       // 1: log IR signal (scan), 0: do not (default)</span>
+</pre></div></td></tr></table></div>    
+    <p style="margin-left: 20px">
+        main.c:
+<div style="margin-left: 20px" class="code"><table><tr><td><div><pre class="c"><span style="color: #339933;">//enter here the Irmp build date:</span>
+<span class="style2">const char</span><span style="color: #339933;"> </span>IrmpVersion[] = <span 
+        class="style3">&quot;20.09.2011&quot;;</span>
+</pre></div></td></tr></table></div>
+
+    <p style="margin-left: 20px">
+        configUSBIRRemoteReceiver.h:
+
+<div style="margin-left: 20px" class="code"><table><tr><td><div><pre class="c">
+<span class="style2">#define</span><span style="color: #339933;"> </span>USE_BOOTLOADER          <span 
+        class="style7">1</span><span style="color: #339933;">				        /* 1 if bootloader option should be included (default), 0 to disable */
+</span>
+<span class="style2">#define</span><span style="color: #339933;"> </span>USE_PowerOnFunction     <span 
+        class="style7">1</span>       <span style="color: #339933;">				/* 1, use PowerOn function (default), 0 to disable */
+</span>
+<span class="style2">#ifdef</span><span style="color: #339933;"> </span>USE_PowerOnFunction
+<span class="style2">#define</span><span style="color: #339933;"> </span>SWITCH_PORT 		PORTC<span style="color: #339933;">					/* PORTx - register for Switch output */</span>
+<span class="style2">#define</span><span style="color: #339933;"> </span>SWITCH_BIT  		PC5<span style="color: #339933;">					/* bit where OK1 will be connected */</span>
+<span class="style2">#define</span><span style="color: #339933;"> </span>SWITCH_DDR  		DDRC<span style="color: #339933;">					/* Switch data direction register */</span>
+<span class="style2">#endif</span></pre></div></td></tr></table></div>     
+
+    <p style="margin-left: 20px">
+        irmpconfig.h:
+           
+        <div style="margin-left: 20px" class="code"><table><tr><td><div><pre class="c">
+/*---------------------------------------------------------------------------------------------------------------------------------------------------
+ * Change settings from 1 to 0 if you want to disable one or more decoders.
+ * This saves program space.
+ *
+ * 1 enable  decoder
+ * 0 disable decoder
+ *
+ * The standard decoders are enabled per default.
+ * Some less common protocols are disabled here, you need to enable them manually.
+ *
+ * If you want to use FDC or RCCAR simultaneous with RC5 protocol, additional program space is required.
+ * If you don't need RC5 when using FDC/RCCAR, you should disable RC5.
+ *---------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+// typical protocols, disable here!             Enable  Remarks                 F_INTERRUPTS             Program Space
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_SIRCS_PROTOCOL             1       // Sony SIRCS           >= 10000                 ~100 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_NEC_PROTOCOL               1       // NEC + APPLE          >= 10000                 ~300 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_SAMSUNG_PROTOCOL           1       // Samsung + Samsung32  >= 10000                 ~300 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_MATSUSHITA_PROTOCOL        1       // Matsushita           >= 10000                  ~50 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_KASEIKYO_PROTOCOL          1       // Kaseikyo             >= 10000                 ~250 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_DENON_PROTOCOL             1       // DENON, Sharp         >= 10000                 ~250 bytes
+<br />
+// more protocols, disable here!                Enable  Remarks                 F_INTERRUPTS             Program Space	
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_RC5_PROTOCOL               0       // RC5                  >= 10000                 ~250 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_RC6_PROTOCOL               0       // RC6 & RC6A           >= 10000                 ~250 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_JVC_PROTOCOL               0       // JVC                  >= 10000                 ~150 bytes	
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_NEC16_PROTOCOL             0       // NEC16                >= 10000                 ~100 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_NEC42_PROTOCOL             0       // NEC42                >= 10000                 ~300 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_IR60_PROTOCOL              0       // IR60 (SAB2008)       >= 10000                 ~300 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_GRUNDIG_PROTOCOL           0       // Grundig              >= 10000                 ~300 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_SIEMENS_PROTOCOL           0       // Siemens Gigaset      >= 15000                 ~550 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_NOKIA_PROTOCOL             0       // Nokia                >= 10000				         ~300 bytes
+<br />
+// exotic protocols, disable here!              Enable  Remarks                 F_INTERRUPTS             Program Space		
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_KATHREIN_PROTOCOL          0       // Kathrein             >= 10000                 ~200 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_NUBERT_PROTOCOL            0       // NUBERT               >= 10000                  ~50 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_BANG_OLUFSEN_PROTOCOL      0       // Bang & Olufsen       >= 10000                 ~200 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_RECS80_PROTOCOL            0       // RECS80 (SAA3004)     >= 15000                  ~50 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_RECS80EXT_PROTOCOL         0       // RECS80EXT (SAA3008)  >= 15000                  ~50 bytes 
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_THOMSON_PROTOCOL           0       // Thomson              >= 10000                 ~250 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_NIKON_PROTOCOL             0       // NIKON camera         >= 10000                 ~250 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_NETBOX_PROTOCOL            0       // Netbox keyboard      >= 10000                 ~400 bytes (PROTOTYPE!)
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_FDC_PROTOCOL               0       // FDC3402 keyboard     >= 10000 (better 15000)  ~150 bytes (~400 in combination with RC5)
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_RCCAR_PROTOCOL             0       // RC Car               >= 10000 (better 15000)  ~150 bytes (~500 in combination with RC5)
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_RUWIDO_PROTOCOL            0       // RUWIDO, T-Home       >= 15000                 ~550 bytes
+<span class="style2">#define</span><span style="color: #339933;"> IRMP_SUPPORT_LEGO_PROTOCOL              0       // LEGO Power RC        >= 20000                 ~150 bytes		
+                        </pre></div></td></tr></table></div>
+                        <br />
+            
+            <b>bootloadHID</b><p style="margin-left: 20px">This packet is including a 
+    modfied version of
+        <a href="http://www.obdev.at/products/vusb/bootloadhid.html">bootloadHID</a>. 
+    The new feature of the modifed bootloader is that no jumper is needed anymore.<br />
+        If the modified bootloadHID got programed on the device the firmware can be 
+    updated by the USB_IR_Remote_Receiver.dll settings/option.<br />
+    The bootloader needs 2048 bytes of boot flash.<br />
+    <br />
+    If the bootloader is getting programmed be sure to set the right fuse bits!<br />
+    (Take a look to the description below how to program the device with 
+    PonyProg2000)<br />
+    <br />
+    If the bootloader position in the flash will be needed to be adjusted change the 
+    bootloader address in the AVR-Studio options:<br />
+&nbsp;&nbsp;&nbsp; Project -&gt; Configuration Options -&gt; Custom Options -&gt; [Linker 
+    Options]<br />
+&nbsp;&nbsp;&nbsp; Edit the line <i>-Wl,--section-start=.text=0x1800</i> for your 
+    device. The bootloader address for the Atmega8 is 0x1800.<p 
+        style="margin-left: 80px; width: 672px;"><IMG SRC="Images\Atmega8_Fuse_Bits_Bootloader.jpg" ALT="AVR_Bootloader"</p>
+    <br />
+    <br />
+    <span class="style6">
+        ###############################################################################</span><br 
+        class="style6" />
+        <span class="style6"># Configure the following variables according to your AVR. 
+        The example below</span><br 
+        class="style6" />
+        <span class="style6"># is for an ATMega8. Program the device with</span><br 
+        class="style6" />
+        <span class="style6"># make fuse&nbsp; # to set the clock generator, boot 
+        section size etc.</span><br 
+        class="style6" />
+        <span class="style6"># make flash # to load the boot loader into flash</span><br 
+        class="style6" />
+        <span class="style6"># make lock&nbsp; # to protect the boot loader from 
+        overwriting</span><br 
+        class="style6" />
+        <br class="style4" />
+        <span class="style6">DEVICE = atmega8</span><br class="style6" />
+        <span class="style6">BOOTLOADER_ADDRESS = 1800</span><br class="style6" />
+        <span class="style6">F_CPU = 12000000</span><br class="style6" />
+        <span class="style6">FUSEH = 0xc0</span><br class="style6" />
+        <span class="style6">FUSEL = 0x9f<br />
+    </span><br class="style6" />
+        <span class="style6"># Fuse high byte:</span><br class="style6" />
+        <span class="style6"># 0xc0 = 1 1 0 0&nbsp;&nbsp; 0 0 0 0 &lt;-- BOOTRST (boot 
+        reset vector at 0x1800)</span><br 
+        class="style6" />
+        <span class="style4"><span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^ ^ ^ ^&nbsp;&nbsp; ^ ^ 
+        ^------ BOOTSZ0</span><br class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | | | |&nbsp;&nbsp; 
+        | +-------- BOOTSZ1</span><br 
+        class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | | | |&nbsp;&nbsp; 
+        + --------- EESAVE (preserve EEPROM over chip erase)</span><br class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | | | 
+        +-------------- CKOPT (full output swing)</span><br 
+        class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | | 
+        +---------------- SPIEN (allow serial programming)</span><br class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 
+        +------------------ WDTON (WDT not always on)</span><br 
+        class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        +-------------------- RSTDISBL (reset pin is enabled)</span><br 
+        class="style5" />
+    <span class="style5"># Fuse low byte:</span><br class="style5" />
+    <span class="style5"># 0x9f = 1 0 0 1&nbsp;&nbsp; 1 1 1 1</span><br class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ^ ^ \ /&nbsp;&nbsp; 
+        \--+--/</span><br 
+        class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | |&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        +------- CKSEL 3..0 (external &gt;8M crystal)</span><br class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | |&nbsp; 
+        +--------------- SUT 1..0 (crystal osc, BOD enabled)</span><br 
+        class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 
+        +------------------ BODEN (BrownOut Detector enabled)</span><br class="style5" />
+    <span class="style5">#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        +-------------------- BODLEVEL (2.7V)<br />
+        ###############################################################################</span></span></p>
+    <b>Screen shot settings/option dialog</b>
+        <p style="margin-left: 80px;">
+    <IMG SRC="Images\MainScreen.jpg" ALT="MainScreen"></p>
+    <p style="margin-left: 20px"><b>Device Connected:</b> If the device got connected to 
+        the host the icon will change to green and the included Irmp build date will be 
+        shown. Also the USB IR Remote Receiver firmware will be shown.<br />
+<b>PowerOn Function Status:</b> If the PowerOn function is enabled the icon will be 
+        green. Use the button to enable/disable the PowerOn function. If the option 
+        &quot;Disable PowerOn when initialized&quot;<br />
+        &nbsp;&nbsp;&nbsp; is checked the PowerOn function will be automatically 
+        disabled when the plugin get's initialized. So the IR code what is used for 
+        PowerOn can be used on the host for a different function.<br />
+<b>Received IR Code:</b> Will show the last received IR code<br />
+<b>Trained IR Code:</b> Will show the IR code what got stored in EEPROM for PowerOn<br />
+<b>Manage Trained IR Code:</b><br />
+<b>&nbsp;&nbsp;&nbsp; Read Trained IR Code:</b> Reads the IR code stored in EEPROM<br />
+<b>&nbsp;&nbsp;&nbsp; Clear Trained IR Code:</b> Will clear the actual stored IR code in 
+        EEPROM. The next received IR code will be stored as new PowerOn IR code.<br />
+<b>&nbsp;&nbsp;&nbsp; Enable IRMP Logging:</b> If your remote will not get decoded it is possible
+				to enable raw IR signal logging. For this the IRMP_LOGGING have to be defined.<br />
+<b>&nbsp;&nbsp;&nbsp; Minimum of Repeats:</b> The device will debounce the remote 
+        control. With the minimum of repeats the number of needed repeats can be 
+        adjusted until the same IR code getting sent again to the host.<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A repeat of 0 means no change to the 
+        remote control.<br />
+        <b>Flash/Update Firmware:</b> Will show a new dialog to update the firmware of 
+        the device. This option is only available if firmware higher or equal 1.1 is 
+        used or the device is in booloader modus</p>
+        
+<b>IRMP Logging</b>
+    <p style="margin-left: 20px;">
+        To log raw IR signals the AVR source have to be compiled with the option IRMP_LOGGING = 1.
+        If the "Enable IRMP Logging" option is enabled you will be asked for a description of the last<br />
+        received IR scan. The received data will be stored in the "IRMP_Log.txt" file located in the same
+        folder where the DLL is located. You can use this text file with "irmp.exe" to test if it can be decoded:<br />
+        Example: "irmp.exe &ltIRMP_Log.txt"<br /><br />
+        
+    <span class="style6">C:\Program Files (x86)\DVBViewer\Plugins>irmp.exe &ltIRMP_Log.txt<br />
+        -------------------------------------------------------------------<br />
+        # 1<br />
+        -------------------------------------------------------------------<br />
+        # 02.01.12 17:18:32<br />
+        00000010111111011000000001111111 p =  2, a = 0xbf40, c = 0x0001, f = 0x00<br />
+         p =  2, a = 0xbf40, c = 0x0001, f = 0x01 <br />
+        </span>        
+</p>
+        
+</p>
+<b>Flash/Update firmware dialog</b>
+        <p style="margin-left: 80px;">
+    <IMG SRC="Images\FlashScreen.jpg" ALT="FlashScreen"></p>
+    <p style="margin-left: 20px;">
+        Load a valide Intel Hex file to flash/update the firmware of the device. The 
+        file size is limited by the device flash size minus 2048 bytes bootloader size.<br />
+        If the USB IR Remote Receiver firmware is running the device will be reseted at 
+        first to bring the device in bootloader modus.<br />
+        After the flashing the device will reboot again and start the new flashed 
+        firmware.<br />
+        <br />
+        There is no need to set the jumper or to disconnect/reconnect the device if the 
+        modified bootloader is getting used.</p>
+        
+    <p><b>USB_IR_Remote_Receiver.ini</b></p>
+    <p style="margin-left: 20px">[IRMP Protocols]<br />
+&nbsp;&nbsp;&nbsp; List of supported protocols of the device (depend on IRMP version).<br />
+&nbsp;&nbsp;&nbsp; If a new protocol is added to the device the DLL doesn't need to be 
+        updated. Just add the new protocol in this section:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>name_of_protocol=IRMP_ID</i><br />
+        <br />
+        [Settings]<br />
+&nbsp;&nbsp;&nbsp; Default the device is opened delayed with 2000ms. This value can be 
+        changed when adding:<i><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; StartUpDelay=desired_value_in_milliseconds</i><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {Default 2000}<br />
+        <br />
+&nbsp;&nbsp;&nbsp; Default there is no key suppression. The received IR codes are 
+        getting forwared as they are getting decoded and received ba the DLL.<br />
+&nbsp;&nbsp;&nbsp; If the host software isn't fast enougth to handle fast repeating IR 
+        codes a timer for key suppresion can be used.<br />
+&nbsp;&nbsp;&nbsp; This option disallow a received IR to get sent to the host software 
+        if a previous received IR code got sent and the key suppression is still active.<br />
+ 
+        <i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Key 
+        Suppression=desired_value_in_milliseconds<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>{Default 0}<br />        
+        <br />
+&nbsp;&nbsp;&nbsp; Add this value to enable a log memo in the settings dialog:<br />
+ 
+        <i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Debug=1</i><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {Default 0}<br />
+    </p>
+    
+<p><b>Program the device with PonyProg2000</b></p>
+    <p style="margin-left: 20px">Download and install the latest beta version of
+    <a href="http://www.lancos.com/prog.html">PonyProg2000</a>.<br />
+        <br />
+        Run at first the calibration:<br />
+        <img alt="PonyProg2000 Calibration" src="Images/Calibration.JPG" 
+            style="width: 769px; height: 150px" /><br />
+        <br />
+        Adjust the device:<br />
+        <img alt="PonyProg2000 Device" src="Images/Device.JPG" 
+            style="width: 769px; height: 467px" /><br />
+        <br />
+        Connect the LPT program adapter and setup the program interface for LPT. 
+        Remember to connect also the USB-Host because the device will need +5V to 
+        operate:<br />
+        <img alt="LPT cable" src="Images/LPT_cable.jpg" 
+            style="width: 434px; height: 326px" /><br />
+        <br />
+        Push &quot;Probe&quot; to test the connection to the device:<br />
+        <img alt="PonyProg2000 IO" src="Images/I_O.JPG" 
+            style="width: 769px; height: 371px" /><br />
+        If there are problems you may need to adjust the &quot;PONYPROG2000.INI&quot; located in 
+        the installation folder of PonyProg2000.<br />
+        Set the value &quot;AutoDetectPorts=YES&quot; to NO and enter manually the LPT port 
+        address like &quot;LPTPorts=3BC&quot;.<br />
+        Take look to the device manager to find out your LPT address.<br />
+        <br />
+        Open the included bootloadHID.hex file:<br />
+        <img alt="open file" src="Images/open_file.JPG" 
+            style="width: 769px; height: 286px" /><br />
+        For the Atmega8 the code should start at address 0x1800.<br />
+        <br />
+        Open the fuse settings and set it like below:<br />
+        <img alt="open fuse settings" src="Images/select_fuses.JPG" 
+            style="width: 769px; height: 397px" /><br />
+        <br />
+        <img alt="Fuses" src="Images/fuses.JPG" style="width: 769px; height: 364px" /><br />
+        Push &quot;Write&quot; to update the fuses at the device and close this dialog.<br />
+        <br />
+        After this use &quot;Write All&quot; to write the bootloadHID.hex on the device:<br />
+        <img alt="Write All" src="Images/write_all.JPG" 
+            style="width: 767px; height: 374px" /><br />
+        <br />
+        When it is finished disconnect the USB cable to power off the device. Disconnect 
+        also the LPT program adapter.<br />
+        Plugin in again the USB cable and the device should be recognized as &quot;BootHID&quot; 
+        in Windows.<br />
+        Now use the DLL settings/options to download a firmware.</p>    
+<hr>
+    <p><b>USB IR Remote Receiver device installation on Windows 7 x86, just plug in the 
+        device. The driver will be installed automatically</b><p style="margin-left: 80px; margin-right: 697px"> <IMG SRC="Images\install_w7_1.jpg" ALT="install_w7">
+    </p>
+    <p style="margin-left: 80px; margin-right: 652px;">
+    <IMG SRC="Images\install_w7_1.jpg" ALT="install_w7"></p>
+    <p><b>USB IR Remote Receiver device installation on Windows XP SP3, just plug in the 
+        device. The driver will be installed automatically</b></p>
+    <p style="margin-left: 80px; margin-right: 697px"> <IMG SRC="Images\install_wxp_0.jpg" ALT="install_xp">
+    </p>
+    <p style="margin-left: 80px; margin-right: 652px;">
+    <IMG SRC="Images\install_wxp_1.jpg" ALT="install_xp"></p>
+<hr>
+<p><b><i><font color="#FF0000">Function prototypes in &quot;USB IR Remote Receiver.dll&quot; 
+    library:</font></i></b></p>
+    <p style="margin-left: 40px">The DLL will handle the communication between the HID 
+        AVR device and the host.<br />
+        The USB IR Remote Receiver DLL can be used directly with DVBViewer in the 
+        '\Plugins' directory as input plugin.<br />
+        The USB IR Remote Receiver DLL can be also used directly with Girder in the 
+        '\Plugins' directory. Tested with Girder 3.2.9 (last Freeware version), 4.0.5.2 
+        and 5.0.10.
+        <br /><br />
+                Also it can be used for other programs to handle the device with the 
+        functions InitNative or InitPAnsiChar.</p>
+    <p style="margin-left: 0px"><b>Screen shots from the demo sources</b></p>
+    <p style="margin-left: 40px">Example output with the DLL_Demo.exe (source Delphi 
+        2010):</p>
+    <p style="margin-left: 40px; margin-right: 548px;"><IMG SRC="Images\delphi_nativepansichar.jpg" ALT="Screen"></p>
+    <p style="margin-left: 40px">Example output with the DLL_Demo_Console.exe (source 
+        Visual Studio 2008):</p>
+    <p style="margin-left: 40px; margin-right: 548px;"><IMG SRC="Images\console_nativeir.jpg" ALT="Screen"></p>
+    <p style="margin-left: 40px; margin-right: 548px;"><IMG SRC="Images\console_nativepansichar.jpg" ALT="Screen"></p>
+    <p><b>Delphi:</b><br>
+    </p>
+    <p><font color="#000080">
+        function</font> <b><a href="#Version">Version</a></b>():<font color="#0000FF"><b>PAnsiChar</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080"> external</font> <font color="#800000"><i> 
+        USBIRRemoteReceiver</i></font> name '<font color="#FF00FF">Version</font>';<br>
+<font color="#000080">
+        function</font> <b><a href="#Copyright">Copyright</a></b>():<font color="#0000FF"><b>PAnsiChar</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080"> external</font> <font color="#800000"><i> 
+        USBIRRemoteReceiver</i></font> name '<font color="#FF00FF">Copyright</font>';<br>
+<font color="#000080">
+        function </font> <b><a href="#PluginName">PluginName</a></b>():<font color="#0000FF"><b>PAnsiChar</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080">
+        external</font> <font color="#800000"><i> USBIRRemoteReceiver</i></font> name '<font color="#FF00FF">PluginName</font>';<br />
+<font color="#000080">
+        procedure </font> <b><a href="#ShowSettings">ShowSettings</a></b>(<font color="#800000"><i><b>Handle</b></i></font> 
+        : <font color="#0000FF"><b>THandle</b></font>);
+<font color="#000080"> stdcall</font> <font color="#000080">
+        external</font> <font color="#800000"><i> USBIRRemoteReceiver</i></font> name '<font color="#FF00FF">ShowSettings</font>';</p>
+    <p><font color="#000080">
+        function </font> <b><a href="#InitNative">InitNative</a></b>(<font color="#800000"><i><b>Callback</b></i></font> 
+        : <font color="#000080"><b><a href="#TCallbackNativeIRData">
+        TCallbackNativeIRData</a></b></font>):<font color="#0000FF"><b>boolean</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080"> external</font> <font color="#800000"><i> 
+        USBIRRemoteReceiver</i></font> 
+        name '<font color="#FF00FF">InitNative</font>';<br>
+<font color="#000080">
+        function </font> <b><a href="#InitPAnsiChar">InitPAnsiChar</a></b>(<font color="#800000"><i><b>Callback</b></i></font> 
+        : <font color="#000080"><b><a href="#TCallbackPAnsiChar">TCallbackPAnsiChar</a></b></font>):<font color="#0000FF"><b>boolean</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080"> external</font> <font color="#800000"><i> 
+        USBIRRemoteReceiver</i></font> 
+        name '<font color="#FF00FF">InitPAnsiChar</font>';</p>
+    <p><b><a name="TCallbackNativeIRData">type</a></b><br />
+&nbsp;&nbsp;&nbsp; <b>TCallbackNativeIRData</b> = procedure(<font color="#800000"><i><b>IRCode</b></i></font> 
+        : <b><a href="#TIRData">TIRData</a></b>); stdcall;<br />
+        <br />
+        <b><a name="TCallbackPAnsiChar">type</a></b><br />
+&nbsp;&nbsp;&nbsp; <b>TCallbackPAnsiChar</b> = procedure(<font color="#800000"><i><b>Protocol, 
+        Address, Command, Flags</b></i></font> : <font color="#0000FF"><b>PAnsiChar</b></font>); 
+        stdcall;</p>
+    <p><a name="TIRData" style="font-weight: 700">type</a><br />
+        <b>&nbsp;&nbsp;&nbsp; TIRData</b> = <b>packed record<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#800000"><i><b>Protocol</b></i></font> 
+        : <font color="#0000FF"><b>byte</b></font>;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#800000"><i><b>Address</b></i></font> 
+        : <font color="#0000FF"><b>word</b></font>;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#800000"><i><b>Command</b></i></font> 
+        : <font color="#0000FF"><b>word</b></font>;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#800000"><i><b>Flags</b></i></font> 
+        : <font color="#0000FF"><b>byte</b></font>;<br />
+&nbsp;&nbsp;&nbsp; end;</b><hr>
+<p><b><u>C++ Builder / Microsoft Visual C++:</u></b></p>
+    <font color="#000080">
+    <p>#define <font color="#800000"><i>USBIRRemoteReceiver<b>&nbsp;&nbsp;&nbsp;</b></i></font> 
+        &quot;USB_IR_Remote_Receiver.dll&quot;;</p>
+    <p><b><font color="#0000FF">const char</font> * <font color="#0000FF"><b>__stdcall</b></font> <a href="#Version">
+        Version</a></b>();<br />
+        <font color="#000080"><b><font color="#0000FF">const char</font> * <font color="#0000FF">
+        __stdcall</font> <a href="#Copyright">Copyright</a></b>();<br />
+        <b><font color="#0000FF">const char</font> * <font color="#0000FF">__stdcall</font> <a href="#PluginName">
+        PluginName</a></b>();<br />
+        <b>void <font color="#0000FF">__stdcall</font> <a href="#ShowSettings">
+        ShowSettings</a></b>( 
+        <b> <font color="#0000FF">HWND</font></b> <i><b> <font color="#800000">Handle</font></b></i> 
+        );</font></p>
+    <p><font color="#0000FF">
+        <b>BOOL</b>
+        </font> <b><font color="#0000FF">__stdcall</font> <a href="#InitNative">
+        InitNative</a></b>( <font color="#000080"><b><a href="#CallbackNativeIRData">
+        CallbackNativeIRData</a></b></font> * <font color="#800000"><i><b>Callback</b></i></font> 
+        )<font color="#0000FF"></font>;<br />
+        <font color="#0000FF"><b>BOOL</b>
+        <b><font color="#0000FF">__stdcall</font> <a href="#InitPAnsiChar">InitPAnsiChar</a></b>( <b><a href="#CallbackPAnsiChar">
+        CallbackPAnsiChar</a></b> * <font color="#800000"><i><b>Callback</b></i></font> 
+        );</font></p>
+    <p><b><a name="CallbackNativeIRData">typedef</a></b> <b> <font color="#0000FF">void </font></b>
+        ( <b><font color="#0000FF">__stdcall</font></b> * <b><font color="#0000FF">
+        CallbackNativeIRData</font></b>) ( <b><a href="#IRMP_DATA">IRMP_DATA</a></b> <font color="#800000"><i><b>
+        IRCode </b></i></font>);<br />
+    <font color="#000080">
+        <b><a name="CallbackPAnsiChar">typedef</a></b> <b> <font color="#0000FF">void </font></b>
+        ( <b><font color="#0000FF">__stdcall</font></b> * <b><font color="#0000FF">
+        CallbackPAnsiChar</font></b>) ( <font color="#0000FF"><b>char</b></font> * <font color="#800000"><i><b>
+        Protocol
+        <font color="#000080">,
+        <font color="#0000FF">char</font> * <font color="#800000">Address
+    <font color="#000080">,
+        <font color="#0000FF">char</font> * <font color="#800000">Command
+    <font color="#000080">,
+        <font color="#0000FF">char</font> * <font color="#800000">Flags</font> </font></font> 
+        &nbsp;</font></font></font></b></i></font>);</font></p>
+    <p><b><a name="IRMP_DATA">typedef struct</a></b><br />
+        {<br />
+&nbsp;&nbsp;&nbsp; <b> <font color="#0000FF">byte&nbsp;&nbsp;&nbsp; </font></b><font color="#800000"><i><b>
+        Protocol</b></i></font>;<br />
+    <font color="#000080">
+&nbsp;&nbsp;&nbsp; <b> <font color="#0000FF">word&nbsp;&nbsp;&nbsp; </font></b><font color="#800000"><i><b>
+        Address</b></i></font>;<br />
+&nbsp;&nbsp;&nbsp; <b> <font color="#0000FF">word&nbsp;&nbsp;&nbsp; </font></b><font color="#800000"><i><b>
+        Command</b></i></font>;<br />
+&nbsp;&nbsp;&nbsp; <b> <font color="#0000FF">byte&nbsp;&nbsp;&nbsp; </font></b><font color="#800000"><i><b>
+        Flags</b></i></font>;</font><br />
+        } <b> <font color="#0000FF">IRMP_DATA</font></b>;</p>
+    </font>
+<hr>
+    <p><font color="#000080">
+        function</font> <b><a name="Version">Version</a></b>():<font color="#0000FF"><b>PAnsiChar</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080"> external</font> <font color="#800000"><i> 
+        USBIRRemoteReceiver</i></font> name '<font color="#FF00FF">Version</font>';</p>
+<p>&nbsp;&nbsp;&nbsp; Function will return the plugin version as PAnsiChar.<br>
+<u>Parameters</u><br>
+&nbsp;&nbsp; none</p>
+<p><u>Return values<br />
+    </u>&nbsp;&nbsp;&nbsp; Function will return USB IR Remote Receiver DLL version 
+    as PAnsiChar.</p>
+<hr>
+<p><font color="#000080">
+    function</font> <b><a name="Copyright">Copyright</a></b>():<font color="#0000FF"><b>PAnsiChar</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080"> external</font> <font color="#800000"><i> 
+    USBIRRemoteReceiver</i></font> name '<font color="#FF00FF">Copyright</font>';</p>
+<p>&nbsp;&nbsp;&nbsp; Function to get copyright of USB IR Remote Receiver DLL.<br>
+    <span class="style1">Parameters</span><br>
+&nbsp;&nbsp; none</p>
+<p><u>Return values</u><b><br>
+    </b>&nbsp;&nbsp;&nbsp; Function will return copyright as PAnsiChar.</p>
+<hr>
+<p><font color="#000080">
+    function</font> <b><a name="PluginName">PluginName</a></b>():<font color="#0000FF"><b>PAnsiChar</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080">
+    external</font> <font color="#800000"><i> USBIRRemoteReceiver</i></font> name '<font color="#FF00FF">PluginName</font>';</p>
+<p>&nbsp;&nbsp;&nbsp; Function to get USB IR Remote Receiver DLL plugin name.<br>
+<u>Parameters</u><br>
+&nbsp;&nbsp; none</p>
+<p><u>Return values</u><b><br>
+    &nbsp;</b>&nbsp;&nbsp; Function will return USB IR Remote Receiver DLL plugin name as 
+    PAnsiChar.</p>
+<hr>
+<p><font color="#000080">
+    procedure</font> <b><a name="ShowSettings">ShowSettings</a></b>(<font color="#800000"><i><b>Handle</b></i></font> 
+    : <font color="#0000FF"><b>THandle</b></font>);
+<font color="#000080"> stdcall</font> <font color="#000080">
+    external</font> <font color="#800000"><i> USBIRRemoteReceiver</i></font> name '<font color="#FF00FF">ShowSettings</font>';</p>
+<p>&nbsp;&nbsp;&nbsp; Procedure to show options/settings dialog of USB IR Remote 
+    Receiver DLL.<br>
+<u>Parameters<br />
+    </u>&nbsp; <i>Handle</i><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [in] Window handle of the calling 
+    program. The dialog will be shown modal.</p>
+<p><u>Notes:</u><b><br>
+    &nbsp;</b>&nbsp;&nbsp; The options/settings dialog will only be shown if the DLL got 
+    initialized first by <i>InitNative</i> / <i>InitPAnsiChar</i>.</p>
+<hr>
+<p><font color="#000080">
+    function</font> <b><a name="InitNative">InitNative</a></b>(<font color="#800000"><i><b>Callback</b></i></font> 
+    : <font color="#000080"><b> <a href="#TCallbackNativeIRData">
+    TCallbackNativeIRData</a></b></font>):<font color="#0000FF"><b>boolean</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080"> external</font> <font color="#800000"><i> 
+    USBIRRemoteReceiver</i></font> 
+    name '<font color="#FF00FF">InitNative</font>';</p>
+<p>&nbsp;&nbsp;&nbsp; Function to init USB IR Remote Receiver for native callback.<br>
+<u>Parameters</u><br>
+&nbsp;&nbsp; <i>Callback</i><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [in] Procedure pointer of a procedure of 
+    type struct <a href="#TCallbackNativeIRData">TCallbackNativeIRData</a>.</p>
+<p><u>Return values</u><b><br>
+&nbsp;&nbsp;&nbsp; </b>If the function succeeds, the return value is <i>True</i>.<br>
+<i><b><font color="#800000">&nbsp;&nbsp;&nbsp;</font></b></i> If the function fails, the return 
+    value is <i>False</i>.</p>
+    <p><span class="style1">Notes:</span><br />
+&nbsp;&nbsp;&nbsp; The device get only opend if the <i>Callback</i> procedure pointer 
+        isn't <i>NIL / NULL</i>.<br />
+&nbsp;&nbsp;&nbsp; For closing the device, unloading/disable the plugin call this 
+        function again with <i>Callback = NIL / NULL</i>.<br />
+        <br />
+&nbsp;&nbsp;&nbsp; The defined Callback procedure will receive the IR codes like the 
+        type struct 
+        <a href="#TIRData">TIRData</a>.</p>
+<hr>
+<p><font color="#000080">
+    function</font> <b><a name="InitPAnsiChar">InitPAnsiChar</a></b>(<font color="#800000"><i><b>Callback</b></i></font> 
+    : <font color="#000080"><b><a href="#TCallbackPAnsiChar">TCallbackPAnsiChar</a></b></font>):<font color="#0000FF"><b>boolean</b></font>;
+<font color="#000080"> stdcall</font> <font color="#000080"> external</font> <font color="#800000"><i> 
+    USBIRRemoteReceiver</i></font> 
+        name '<font color="#FF00FF">InitPAnsiChar</font>';</p>
+<p>&nbsp;&nbsp;&nbsp; Function to init USB IR Remote Receiver for native callback.<br>
+<u>Parameters</u><br>
+&nbsp;&nbsp; <i>Callback</i><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [in] Procedure pointer of a procedure of 
+    type struct <a href="#TCallbackPAnsiChar">TCallbackPAnsiChar</a>.</p>
+<p><u>Return values</u><b><br>
+&nbsp;&nbsp;&nbsp; </b>If the function succeeds, the return value is <i>True</i>.<br>
+<i><b><font color="#800000">&nbsp;&nbsp;&nbsp;</font></b></i> If the function fails, the return 
+    value is <i>False</i>.</p>
+    <p><span class="style1">Notes:</span><br />
+&nbsp;&nbsp;&nbsp; The device get only opend if the <i>Callback</i> procedure pointer 
+        isn't <i>NIL / NULL</i>.<br />
+&nbsp;&nbsp;&nbsp; For closing the device, unloading/disable the plugin call this 
+        function again with <i>Callback = NIL / NULL</i>.<br />
+        <br />
+&nbsp;&nbsp;&nbsp; The defined Callback procedure will receive the IR codes as
+        <i>Protocol, Adress, Command </i> and<i> Flags</i> : <font color="#0000FF"><b>
+        PAnsiChar</b></font>.</p>
+<hr>
+<p>For more information see also the demo application.</p>
+<p><i><b>Copyright © 2010&nbsp; Portisch.</b>
+</i></p>
+</body>
+</html>
