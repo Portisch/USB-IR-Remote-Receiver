@@ -361,9 +361,8 @@ void SendINTData(void)
 
 		memcpy(&replyBuf[0], &NewIRCodeAvailable, sizeof(uchar));							// copy report id to reply buffer
 		memcpy(&replyBuf[1], &irmp_data, sizeof(irmp_data)); 								// copy received IR code to reply buffer
-
-	    while (!usbInterruptIsReady()) usbPoll();											// check if USB int is ready
-	        usbSetInterrupt(&replyBuf[0], sizeof(irmp_data) + sizeof(uchar));				// send ReportID + IR data
+	    
+	    usbSetInterrupt(&replyBuf[0], sizeof(irmp_data) + sizeof(uchar));					// send ReportID + IR data
 	}
 }
 /* ------------------------------------------------------------------------- */
