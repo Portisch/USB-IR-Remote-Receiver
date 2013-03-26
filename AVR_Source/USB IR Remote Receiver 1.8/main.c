@@ -23,7 +23,6 @@ at least be connected to INT0 as well.
 #include "configUSBIRRemoteReceiver.h"	/* main config file */
 
 #include "Irmp\irmp.h"			/* ir remote handling */
-#include "Irmp\irmpconfig.h"	/* ir remote config file */
 
 #include <avr/pgmspace.h>   /* required by usbdrv.h */
 #include "usbdrv.h"			/* v-usb driver */
@@ -33,7 +32,7 @@ at least be connected to INT0 as well.
 #endif
 
 //enter here the Irmp build date:
-const char IrmpVersion[] = "20.09.2011";
+const char IrmpVersion[] = "12.03.2013";
 
 
 

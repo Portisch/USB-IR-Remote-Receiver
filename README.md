@@ -5,6 +5,7 @@ Ein Infrarot-Multiprotokoll-Decoder in Kombination mit IRMP von Frank M. und V-U
 
 http://www.mikrocontroller.net/articles/USB_IR_Remote_Receiver
 
+26.03.2013	AVR:	• v1.9, IRMP Update auf 12.03.2013, neues Protokoll BOSE und A1TVBOX, IRMP Logging per USB entfernt
 
 02.01.2012	DLL: 	• v1.0.0.14, IR Polling entfernt, IRMP Logging per USB hinzugefügt 
 		AVR: 	• v1.8, IR Polling entfernt, IRMP Logging per USB hinzugefügt. Source für AVR Studio v5 konvertiert.

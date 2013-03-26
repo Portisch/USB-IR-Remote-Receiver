@@ -1,9 +1,11 @@
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * irmpconfig.h
  *
- * Copyright (c) 2009-2011 Frank Meyer - frank(at)fli4l.de
+ * DO NOT INCLUDE THIS FILE, WILL BE INCLUDED BY IRMP.H!
  *
- * $Id: irmpconfig.h,v 1.74 2011/09/11 13:17:38 fm Exp $
+ * Copyright (c) 2009-2013 Frank Meyer - frank(at)fli4l.de
+ *
+ * $Id: irmpconfig.h,v 1.98 2013/01/17 07:33:13 fm Exp $
  *
  * ATMEGA88 @ 8 MHz
  *
@@ -17,6 +19,10 @@
 #ifndef _IRMPCONFIG_H_
 #define _IRMPCONFIG_H_
 
+#ifndef _IRMP_H_
+#  error please include only irmp.h, not irmpconfig.h
+#endif
+
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * Change F_INTERRUPTS if you change the number of interrupts per second,
  * Normally, F_INTERRUPTS should be in the range from 10000 to 15000, typical is 15000
@@ -24,7 +30,7 @@
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
 #ifndef F_INTERRUPTS
-#define F_INTERRUPTS                            10000   // interrupts per second, min: 10000, max: 20000, typ: 15000
+#  define F_INTERRUPTS                          15000   // interrupts per second, min: 10000, max: 20000, typ: 15000
 #endif
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -39,6 +45,7 @@
  *
  * If you want to use FDC or RCCAR simultaneous with RC5 protocol, additional program space is required.
  * If you don't need RC5 when using FDC/RCCAR, you should disable RC5.
+ * You cannot enable both DENON and RUWIDO, only enable one of them.
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
 
@@ -56,12 +63,13 @@
 #define IRMP_SUPPORT_JVC_PROTOCOL               0       // JVC                  >= 10000                 ~150 bytes
 #define IRMP_SUPPORT_NEC16_PROTOCOL             0       // NEC16                >= 10000                 ~100 bytes
 #define IRMP_SUPPORT_NEC42_PROTOCOL             0       // NEC42                >= 10000                 ~300 bytes
-#define IRMP_SUPPORT_IR60_PROTOCOL              0       // IR60 (SAB2008)       >= 10000                 ~300 bytes
+#define IRMP_SUPPORT_IR60_PROTOCOL              0       // IR60 (SDA2008)       >= 10000                 ~300 bytes
 #define IRMP_SUPPORT_GRUNDIG_PROTOCOL           0       // Grundig              >= 10000                 ~300 bytes
 #define IRMP_SUPPORT_SIEMENS_PROTOCOL           0       // Siemens Gigaset      >= 15000                 ~550 bytes
 #define IRMP_SUPPORT_NOKIA_PROTOCOL             0       // Nokia                >= 10000                 ~300 bytes
 
 // exotic protocols, enable here!               Enable  Remarks                 F_INTERRUPTS            Program Space
+#define IRMP_SUPPORT_BOSE_PROTOCOL              0       // BOSE                 >= 10000                 ~150 bytes
 #define IRMP_SUPPORT_KATHREIN_PROTOCOL          0       // Kathrein             >= 10000                 ~200 bytes
 #define IRMP_SUPPORT_NUBERT_PROTOCOL            0       // NUBERT               >= 10000                  ~50 bytes
 #define IRMP_SUPPORT_BANG_OLUFSEN_PROTOCOL      0       // Bang & Olufsen       >= 10000                 ~200 bytes
@@ -73,24 +81,54 @@
 #define IRMP_SUPPORT_FDC_PROTOCOL               0       // FDC3402 keyboard     >= 10000 (better 15000)  ~150 bytes (~400 in combination with RC5)
 #define IRMP_SUPPORT_RCCAR_PROTOCOL             0       // RC Car               >= 10000 (better 15000)  ~150 bytes (~500 in combination with RC5)
 #define IRMP_SUPPORT_RUWIDO_PROTOCOL            0       // RUWIDO, T-Home       >= 15000                 ~550 bytes
+#define IRMP_SUPPORT_A1TVBOX_PROTOCOL           0       // A1 TV BOX            >= 15000 (better 20000)  ~300 bytes
 #define IRMP_SUPPORT_LEGO_PROTOCOL              0       // LEGO Power RC        >= 20000                 ~150 bytes
 
+
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
- * Change hardware pin here:
+ * Change hardware pin here for ATMEL AVR
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
-#ifdef PIC_CCS_COMPILER                                 // PIC CCS Compiler:
+#if defined (ATMEL_AVR)                                                 // use PB6 as IR input on AVR
+#  define IRMP_PORT_LETTER                      B
+#  define IRMP_BIT_NUMBER                       6
 
-#define IRMP_PIN                                PIN_D4  // use PB4 as IR input on PIC
+/*---------------------------------------------------------------------------------------------------------------------------------------------------
+ * Change hardware pin here for PIC C18 compiler
+ *---------------------------------------------------------------------------------------------------------------------------------------------------
+ */
+#elif defined (PIC_C18)                                                 // use RB4 as IR input on PIC
+#  define IRMP_PIN                              PORTBbits.RB4
 
-#else                                                   // AVR:
+/*---------------------------------------------------------------------------------------------------------------------------------------------------
+ * Change hardware pin here for PIC CCS compiler
+ *---------------------------------------------------------------------------------------------------------------------------------------------------
+ */
+#elif defined (PIC_CCS)
+#  define IRMP_PIN                              PIN_B4                  // use PB4 as IR input on PIC
 
-#define IRMP_PORT                               PORTD
-#define IRMP_DDR                                DDRD
-#define IRMP_PIN                                PIND
-#define IRMP_BIT                                4       // use PB6 as IR input on AVR
+/*---------------------------------------------------------------------------------------------------------------------------------------------------
+ * Change hardware pin here for ARM STM32
+ *---------------------------------------------------------------------------------------------------------------------------------------------------
+ */
+#elif defined (ARM_STM32)                                               // use C13 as IR input on STM32
+#  define IRMP_PORT_LETTER                      C
+#  define IRMP_BIT_NUMBER                       13
 
-#define input(x)                                ((x) & (1 << IRMP_BIT))
+/*---------------------------------------------------------------------------------------------------------------------------------------------------
+ * Change hardware pin here for Stellaris ARM Cortex M4
+ *---------------------------------------------------------------------------------------------------------------------------------------------------
+ */
+#elif defined (STELLARIS_ARM_CORTEX_M4)                                 // use B4 as IR input on Stellaris LM4F
+#  define IRMP_PORT_LETTER                      B
+#  define IRMP_BIT_NUMBER                       4
+
+/*---------------------------------------------------------------------------------------------------------------------------------------------------
+ * Handling of unknown target system: DON'T CHANGE
+ *---------------------------------------------------------------------------------------------------------------------------------------------------
+ */
+#elif !defined (UNIX_OR_WINDOWS)
+#  error target system not defined.
 #endif
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,75 +136,32 @@
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
 #ifndef IRMP_LOGGING
-#define IRMP_LOGGING                            0       // 1: log IR signal (scan), 0: do not (default)
+#  define IRMP_LOGGING                          0       // 1: log IR signal (scan), 0: do not. default is 0
+#endif
+
+/*---------------------------------------------------------------------------------------------------------------------------------------------------
+ * Use external logging routines
+ * If you enable external logging, you have also to enable IRMP_LOGGING above
+ *---------------------------------------------------------------------------------------------------------------------------------------------------
+ */
+#ifndef IRMP_EXT_LOGGING
+#  define IRMP_EXT_LOGGING                      0       // 1: use external logging, 0: do not. default is 0
 #endif
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * Set IRMP_PROTOCOL_NAMES to 1 if want to access protocol names (for logging etc), costs ~300 bytes RAM!
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
-#define IRMP_PROTOCOL_NAMES                     0       // 1: access protocol names, 0: do not (default),
+#ifndef IRMP_PROTOCOL_NAMES
+#  define IRMP_PROTOCOL_NAMES                   0       // 1: access protocol names, 0: do not. default is 0
+#endif
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  * Use Callbacks to indicate input signal
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
-#define IRMP_USE_CALLBACK                       0       // flag: 0 = don't use callbacks, 1 = use callbacks, default is 0
-
-/*---------------------------------------------------------------------------------------------------------------------------------------------------
- * DO NOT CHANGE THE FOLLOWING LINES !
- *---------------------------------------------------------------------------------------------------------------------------------------------------
- */
-#if IRMP_SUPPORT_SIEMENS_PROTOCOL == 1 && F_INTERRUPTS < 15000
-#warning F_INTERRUPTS too low, SIEMENS protocol disabled (should be at least 15000)
-#undef IRMP_SUPPORT_SIEMENS_PROTOCOL
-#define IRMP_SUPPORT_SIEMENS_PROTOCOL           0
-#endif
-
-#if IRMP_SUPPORT_RUWIDO_PROTOCOL == 1 && F_INTERRUPTS < 15000
-#warning F_INTERRUPTS too low, RUWIDO protocol disabled (should be at least 15000)
-#undef IRMP_SUPPORT_RUWIDO_PROTOCOL
-#define IRMP_SUPPORT_RUWIDO_PROTOCOL            0
-#endif
-
-#if IRMP_SUPPORT_RECS80_PROTOCOL == 1 && F_INTERRUPTS < 15000
-#warning F_INTERRUPTS too low, RECS80 protocol disabled (should be at least 15000)
-#undef IRMP_SUPPORT_RECS80_PROTOCOL
-#define IRMP_SUPPORT_RECS80_PROTOCOL            0
-#endif
-
-#if IRMP_SUPPORT_RECS80EXT_PROTOCOL == 1 && F_INTERRUPTS < 15000
-#warning F_INTERRUPTS too low, RECS80EXT protocol disabled (should be at least 15000)
-#undef IRMP_SUPPORT_RECS80EXT_PROTOCOL
-#define IRMP_SUPPORT_RECS80EXT_PROTOCOL         0
-#endif
-
-#if IRMP_SUPPORT_LEGO_PROTOCOL == 1 && F_INTERRUPTS < 20000
-#warning F_INTERRUPTS too low, LEGO protocol disabled (should be at least 20000)
-#undef IRMP_SUPPORT_LEGO_PROTOCOL
-#define IRMP_SUPPORT_LEGO_PROTOCOL              0
-#endif
-
-#if IRMP_SUPPORT_JVC_PROTOCOL == 1 && IRMP_SUPPORT_NEC_PROTOCOL == 0
-#warning JVC protocol needs also NEC protocol, NEC protocol enabled
-#undef IRMP_SUPPORT_NEC_PROTOCOL
-#define IRMP_SUPPORT_NEC_PROTOCOL               1
-#endif
-
-#if IRMP_SUPPORT_NEC16_PROTOCOL == 1 && IRMP_SUPPORT_NEC_PROTOCOL == 0
-#warning NEC16 protocol needs also NEC protocol, NEC protocol enabled
-#undef IRMP_SUPPORT_NEC_PROTOCOL
-#define IRMP_SUPPORT_NEC_PROTOCOL               1
-#endif
-
-#if IRMP_SUPPORT_NEC42_PROTOCOL == 1 && IRMP_SUPPORT_NEC_PROTOCOL == 0
-#warning NEC42 protocol needs also NEC protocol, NEC protocol enabled
-#undef IRMP_SUPPORT_NEC_PROTOCOL
-#define IRMP_SUPPORT_NEC_PROTOCOL               1
-#endif
-
-#if F_INTERRUPTS > 20000
-#error F_INTERRUPTS too high (should be not greater than 20000)
+#ifndef IRMP_USE_CALLBACK
+#  define IRMP_USE_CALLBACK                     0       // 1: use callbacks. 0: do not. default is 0
 #endif
 
 #endif /* _WC_IRMPCONFIG_H_ */

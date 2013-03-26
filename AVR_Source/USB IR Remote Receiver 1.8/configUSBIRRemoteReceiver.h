@@ -13,9 +13,8 @@
 extern "C"
 {
 #endif
-#include "Irmp\irmpconfig.h"						/* ir remote config file */
 
-#define USE_BOOTLOADER			1					/* 1 if bootloader option should be included (default), 0 to disable */
+#define USE_BOOTLOADER			1					/* 1 if boot loader option should be included (default), 0 to disable */
 
 //define output pin for power on switch:
 #define USE_PowerOnFunction		1					/* 1, use PowerOn function (default), 0 to disable */
@@ -28,17 +27,9 @@ extern "C"
 
 
 #if USE_BOOTLOADER
-	#if IRMP_LOGGING
-	#define USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH    117
-	#else
 	#define USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH    98
-	#endif
 #else
-	#if IRMP_LOGGING
-	#define USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH    108
-	#else
 	#define USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH    89
-	#endif
 #endif
 /* Define this to the length of the HID report descriptor, if you implement
  * an HID device. Otherwise don't define it or define it to 0.

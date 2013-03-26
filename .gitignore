@@ -14,3 +14,13 @@
 # Executables
 *.out
 *.app
+
+# AVR Studio
+*.eep
+*.map
+*.d
+*.lss
+*.elf
+*.mk
+*.atsuo
+*.avrsuo
