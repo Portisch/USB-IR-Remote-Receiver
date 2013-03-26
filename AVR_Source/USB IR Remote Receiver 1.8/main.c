@@ -86,17 +86,6 @@ PROGMEM char usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = {
     0x09, 0x00,                    //   USAGE (Undefined)
     0xb2, 0x02, 0x01,              //   FEATURE (Data,Var,Abs,Buf)
 #endif
-# if IRMP_LOGGING
-    0x85, 0x0A,                    //   REPORT_ID (10)
-    0x95, 0x02,                    //   REPORT_COUNT (2)
-    0x09, 0x00,                    //   USAGE (Undefined)
-    0x82, 0x00, 0x01,              //   INPUT (Data,Ary,Abs,Buf)
-	
-    0x85, 0x0B,                    //   REPORT_ID (11)
-    0x96, 0xBC, 0x02,              //   REPORT_COUNT (700)
-    0x09, 0x00,                    //   USAGE (Undefined)
-    0xb2, 0x02, 0x01,              //   FEATURE (Data,Var,Abs,Buf)
-#endif	
     0xc0                           // END_COLLECTION
 };
 
@@ -116,10 +105,6 @@ const uchar	  ReadIrmpVersion    = 7;
 const uchar	  SetMinRepeats 	 = 8;
 #if USE_BOOTLOADER
 const uchar	  ResetForBootloader = 9;
-#endif
-# if IRMP_LOGGING
-const uchar	  NewLogAvailable	 = 10;
-const uchar	  ReadLogData		 = 11;
 #endif
 
 static uchar  DoWriteReport		 = 0;
@@ -219,12 +204,6 @@ uchar   usbFunctionRead(uchar *data, uchar len)
 	{
 		memcpy(data, &replyBuf[currentAddress], len);	
 	}
-	#if IRMP_LOGGING
-	else if ( DoReadReport == ReadLogData )
-	{
-		memcpy(data, &buf[currentAddress], len);
-	}
-	#endif
 
     currentAddress += len;
     bytesRemaining -= len;
@@ -299,13 +278,6 @@ usbRequest_t    *rq = (void *)data;
 	            currentAddress = 0;
 				DoReadReport = ReadIrmpVersion;
 	            return USB_NO_MSG;  														// use usbFunctionRead() to obtain data
-			#if IRMP_LOGGING
-            }else if(rq->wValue.bytes[0] == ReadLogData){ 									/* ReportID 11 ReadLogData */
-	            bytesRemaining = sizeof(buf);
-	            currentAddress = 0;
-				DoReadReport = ReadLogData;
-	            return USB_NO_MSG;  														// use usbFunctionRead() to obtain data				
-			#endif
             }	 
         }else if(rq->bRequest == USBRQ_HID_SET_REPORT){ 
             if(rq->wValue.bytes[0] == SetPowerOnEnabled){   								/* ReportID 4 SetPowerOnEnabled */	
@@ -365,19 +337,6 @@ void SendINTData(void)
 	    usbSetInterrupt(&replyBuf[0], sizeof(irmp_data) + sizeof(uchar));					// send ReportID + IR data
 	}
 }
-/* ------------------------------------------------------------------------- */
-/* function to log IR signals and transfer to host by USB
-*/
-#if IRMP_LOGGING
-void irmp_log_usb (unsigned short len)
-{
-	memcpy(&replyBuf[0], &NewLogAvailable, sizeof(uchar));								// copy report id to reply buffer	
-	memcpy(&replyBuf[1], &len, sizeof(unsigned short));
-	
-	while (!usbInterruptIsReady()) usbPoll();											// check if USB int is ready
-		usbSetInterrupt(&replyBuf[0], sizeof(uchar) + sizeof(unsigned short));			// send ReportID + IR data		
-}
-#endif
 /* ------------------------------------------------------------------------- */
 /* main function
 */
