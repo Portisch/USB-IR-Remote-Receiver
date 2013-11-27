@@ -40,7 +40,7 @@ const char IrmpVersion[] = "12.03.2013";
 /* ----------------------------- USB interface ----------------------------- */
 /* ------------------------------------------------------------------------- */
 
-PROGMEM char usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = {
+PROGMEM const char usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = {
     0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
     0x0b, 0x01, 0x00, 0x00, 0xff,  // USAGE (Vendor Defined Page 1:Vendor Usage 1)
     0xa1, 0x01,                    // COLLECTION (Application)
@@ -132,7 +132,7 @@ static uchar    replyBuf[16];
 /* ------------------------------------------------------------------------- */
 /* main functions for irmp
  */
-void
+static void
 timer_init (void)
 {
 																			/* IR polling timer */		
@@ -153,7 +153,7 @@ timer_init (void)
  * init all io pins of the AVR, first all to input with pullups. then config USB and output pin
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
-void 
+static void
 init_io(void) 
 {
 	/* first set all pins to input */
@@ -313,7 +313,7 @@ usbRequest_t    *rq = (void *)data;
     return 0; 
 } 
 /* ------------------------------------------------------------------------- */
-void SendINTData(void)
+static void SendINTData(void)
 {
 	
 	if (!(irmp_data.flags & IRMP_FLAG_REPETITION))											// first check if the IR command is repeated
