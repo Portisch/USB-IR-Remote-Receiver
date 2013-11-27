@@ -40,7 +40,7 @@ const char IrmpVersion[] = "12.03.2013";
 /* ----------------------------- USB interface ----------------------------- */
 /* ------------------------------------------------------------------------- */
 
-PROGMEM char usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = {
+PROGMEM const char usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = {
     0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
     0x0b, 0x01, 0x00, 0x00, 0xff,  // USAGE (Vendor Defined Page 1:Vendor Usage 1)
     0xa1, 0x01,                    // COLLECTION (Application)
