@@ -1,0 +1,49 @@
+DEVICE := atmega168
+F_CPU := 12000000UL
+
+AVRDUDE_PROGRAMMER := avrispv2
+AVRDUDE_PORT := usb
+
+AVRDUDE := avrdude -c$(AVRDUDE_PROGRAMMER) -P$(AVRDUDE_PORT) -p $(DEVICE)
+
+CC := avr-gcc
+OBJDUMP := avr-objdump
+OBJCOPY := avr-objcopy
+SIZE := avr-size
+
+CPPFLAGS := -I. -Iusbdrv/ -IIrmp/ -DF_CPU=$(F_CPU)
+CFLAGS := -Wall -Os -fpack-struct -fshort-enums -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=$(DEVICE)
+LDFLAGS := -Wl,-Map,USB_IR_Remote_Receiver.map -mmcu=$(DEVICE)
+
+OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o Irmp/irmp.o main.o
+
+PROJECT = USB_IR_Remote_Receiver
+
+.c.o:
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+
+.S.o:
+	$(CC) $(CPPFLAGS) $(CFLAGS) -x assembler-with-cpp -c -o $@ $<
+
+all: $(PROJECT).hex
+
+$(PROJECT).elf: $(OBJECTS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $(PROJECT).elf $^
+
+$(PROJECT).lss: $(PROJECT).elf
+	$(OBJDUMP) -h -S $(PROJECT).elf > $(PROJECT).lss
+
+$(PROJECT).hex: $(PROJECT).elf $(PROJECT).lss
+	$(OBJCOPY) -R .eeprom -O ihex $(PROJECT).elf $(PROJECT).hex
+
+$(PROJECT).eep: $(PROJECT).elf
+	$(OBJCOPY) -j .eeprom --no-change-warnings --change-section-lma .eeprom=0 -O ihex $(PROJECT).elf $(PROJECT).eep
+
+size: $(PROJECT).elf
+	$(SIZE) --format=berkeley -t $(PROJECT).elf
+
+flash: $(PROJECT).hex
+	$(AVRDUDE) -Uflash:w:$(PROJECT).hex:a
+
+clean:
+	$(RM) $(PROJECT).elf $(PROJECT).eep $(PROJECT).lss $(PROJECT).hex *.o $(OBJECTS)
